@@ -1,43 +1,113 @@
-# Svelte + Vite
+# Aurora Ground Station
 
-This template should help get you started developing with Svelte in Vite.
+This project represents the ground station for the Aurora Rocketry Team. It is designed to visualize real-time telemetry data from the rocket during flight and simulations.
 
-## Recommended IDE Setup
+The application is built with **Svelte** (Frontend) and uses a **Python** bridge to handle data ingestion from various sources (Serial, CSV replay, or Random generation) and broadcast it via WebSockets.
 
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode).
+## Features
 
-## Need an official Svelte framework?
+*   **Real-time Dashboard**: Visualize critical flight data including:
+    *   Acceleration, Velocity, and Altitude plots.
+    *   Sensor data (IMU, Barometers, Accelerometer).
+    *   Current flight stage status.
+*   **Command Center**: Interface for sending commands to the rocket.
+*   **Flexible Data Sources**:
+    *   **Serial**: Connect directly to the ground station hardware via USB.
+    *   **File Replay**: Replay flight data from CSV files for analysis and testing.
+    *   **Simulation**: Generate random synthetic data for UI testing.
+*   **Dual Connection Mode**: Supports both WebSocket connection (via Python bridge) and direct Web Serial connection.
 
-Check out [SvelteKit](https://github.com/sveltejs/kit#readme), which is also powered by Vite. Deploy anywhere with its serverless-first approach and adapt to various platforms, with out of the box support for TypeScript, SCSS, and Less, and easily-added support for mdsvex, GraphQL, PostCSS, Tailwind CSS, and more.
+## Project Structure
 
-## Technical considerations
-
-**Why use this over SvelteKit?**
-
-- It brings its own routing solution which might not be preferable for some users.
-- It is first and foremost a framework that just happens to use Vite under the hood, not a Vite app.
-
-This template contains as little as possible to get started with Vite + Svelte, while taking into account the developer experience with regards to HMR and intellisense. It demonstrates capabilities on par with the other `create-vite` templates and is a good starting point for beginners dipping their toes into a Vite + Svelte project.
-
-Should you later need the extended capabilities and extensibility provided by SvelteKit, the template has been structured similarly to SvelteKit so that it is easy to migrate.
-
-**Why include `.vscode/extensions.json`?**
-
-Other templates indirectly recommend extensions via the README, but this file allows VS Code to prompt the user to install the recommended extension upon opening the project.
-
-**Why enable `checkJs` in the JS template?**
-
-It is likely that most cases of changing variable types in runtime are likely to be accidental, rather than deliberate. This provides advanced typechecking out of the box. Should you like to take advantage of the dynamically-typed nature of JavaScript, it is trivial to change the configuration.
-
-**Why is HMR not preserving my local component state?**
-
-HMR state preservation comes with a number of gotchas! It has been disabled by default in both `svelte-hmr` and `@sveltejs/vite-plugin-svelte` due to its often surprising behavior. You can read the details [here](https://github.com/sveltejs/svelte-hmr/tree/master/packages/svelte-hmr#preservation-of-local-state).
-
-If you have state that's important to retain within a component, consider creating an external store which would not be replaced by HMR.
-
-```js
-// store.js
-// An extremely simple external store
-import { writable } from 'svelte/store'
-export default writable(0)
 ```
+aurora-ground-station/
+├── public/                 # Static assets
+├── src/
+│   ├── lib/                # Svelte components
+│   │   ├── CommandCenter.svelte
+│   │   ├── Counter.svelte
+│   │   ├── Dashboard.svelte
+│   │   ├── Header.svelte
+│   │   └── utils.js
+│   ├── assets/             # Project assets
+│   ├── App.svelte          # Main application component
+│   ├── bridge.py           # Python WebSocket telemetry bridge
+│   ├── main.js             # Entry point
+│   └── simulation_data.csv # Sample data for simulation
+├── index.html              # HTML entry point
+├── package.json            # Node.js dependencies and scripts
+├── svelte.config.js        # Svelte configuration
+└── vite.config.js          # Vite configuration
+```
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+*   **Node.js** (v16 or higher)
+*   **npm** (usually comes with Node.js)
+*   **Python 3.8+**
+
+## Installation
+
+1.  **Clone the repository:**
+    ```bash
+    git clone https://github.com/AuroraRocketryTeam/aurora-ground-station.git
+    cd aurora-ground-station
+    ```
+
+2.  **Install Frontend Dependencies:**
+    ```bash
+    npm install
+    ```
+
+3.  **Install Python Dependencies:**
+    You will need `websockets`, `pyserial`, and `pandas`.
+    ```bash
+    pip install websockets pyserial pandas
+    ```
+
+## Usage
+
+To run the full ground station, you typically need to run both the Frontend (UI) and the Backend Bridge (Data Source).
+
+### 1. Start the Frontend
+
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+Open your browser and navigate to the URL shown (usually `http://localhost:5173`).
+
+### 2. Start the Telemetry Bridge
+
+The `bridge.py` script acts as a server that feeds data to the frontend. It supports multiple modes:
+
+**Mode A: File Replay (Default)**
+Replays data from a CSV file. Useful for debriefing or testing with real flight data.
+```bash
+python src/bridge.py --source FILE --file src/simulation_data.csv
+```
+
+**Mode B: Random Simulation**
+Generates random data to test the UI responsiveness.
+```bash
+python src/bridge.py --source RANDOM
+```
+
+**Mode C: Serial Connection (Real Hardware)**
+Reads data from a connected USB device (e.g., LoRa receiver).
+```bash
+python src/bridge.py --source SERIAL --port COM3
+```
+*Note: Replace `COM3` with your actual serial port (e.g., `/dev/ttyUSB0` on Linux/Mac).*
+
+## Connection Settings
+
+In the Frontend UI:
+1.  Select **Connection Type**:
+    *   **WebSocket**: Connects to the `bridge.py` script (default `ws://localhost:8765`).
+    *   **Serial**: Connects directly to a serial device using the Web Serial API (Chrome/Edge only).
+2.  Click **Connect**.
